@@ -42,7 +42,7 @@ distancey = 0;
 /* [Styles] */
 
 // baseplate styles
-style_plate = 3; // [0: thin, 1:weighted, 2:skeletonized, 3: screw together]
+style_plate = 2; // [0: thin, 1:weighted, 2:skeletonized, 3: screw together]
 
 // enable magnet hole
 enable_magnet = true; 
@@ -98,8 +98,24 @@ module gridfinityBaseplate(gridx, gridy, length, dix, diy, sp, sm, sh) {
             }
         }
         if (sp == 3) cutter_screw_together(gx, gy, off);    
+
+        if (sp == 0 || sp == 2 && gridx > 1) {
+
+            if(gridy >= 2) {
+                pattern_linear(1,gridy,0,length)
+                cut_box_thing(gridx, length);
+            }
+            else {
+                cut_box_thing(gridx, length);
+            }
+        }
     }
 
+}
+
+module cut_box_thing(gridx, length) {
+    pattern_linear(x=gridx-1,sx=length)
+    cube([15,15,50], true);
 }
 
 module cutter_weight() {

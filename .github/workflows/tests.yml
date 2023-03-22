@@ -61,3 +61,18 @@ jobs:
     - name: Test with unittest
       run: |
         python -m unittest discover tests/
+
+  test_macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+    - name: Install openscad nightly
+      run: |
+        brew create --cask https://files.openscad.org/snapshots/OpenSCAD-2023.03.17.dmg
+    - name: Test with unittest
+      run: |
+        python -m unittest discover tests/

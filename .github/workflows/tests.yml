@@ -26,7 +26,7 @@ jobs:
     - name: Install openscad nightly
       run: |
         wget -qO- https://files.openscad.org/OBS-Repository-Key.pub | sudo apt-key add -
-        sudo echo "deb https://download.opensuse.org/repositories/home:/t-paul/xUbuntu_22.04/ ./" >> /etc/apt/sources.list.d/openscad.list
+        sudo bash -c 'echo "deb https://download.opensuse.org/repositories/home:/t-paul/xUbuntu_22.04/ ./" >> /etc/apt/sources.list.d/openscad.list'
         sudo apt update && sudo apt install openscad-nightly -y
         sudo ln -s /usr/bin/openscad-nightly /usr/bin/openscad
     - name: Install python dependencies

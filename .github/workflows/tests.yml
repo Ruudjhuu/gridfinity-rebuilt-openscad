@@ -72,8 +72,9 @@ jobs:
         python-version: "3.10"
     - name: Install openscad nightly
       run: |
-        brew update
-        brew create --cask https://files.openscad.org/snapshots/OpenSCAD-2023.03.17.dmg
+        wget -O openscad.dmg https://files.openscad.org/snapshots/OpenSCAD-2023.03.17.dmg
+        sudo hdiutil attach openscad.dmg
+        ls -lah /Volumes
     - name: Test with unittest
       run: |
         python -m unittest discover tests/

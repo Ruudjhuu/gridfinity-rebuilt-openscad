@@ -74,7 +74,7 @@ jobs:
       run: |
         wget -O openscad.dmg https://files.openscad.org/snapshots/OpenSCAD-2023.03.17.dmg
         sudo hdiutil attach openscad.dmg
-        ls -lah /Volumes
+        ls -lah /Volumes/OpenScad
     - name: Test with unittest
       run: |
         python -m unittest discover tests/

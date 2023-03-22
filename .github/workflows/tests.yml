@@ -38,7 +38,7 @@ jobs:
       run: |
         python -m unittest discover tests/
 
-test_windows:
+  test_windows:
 
     runs-on: windows-latest
 

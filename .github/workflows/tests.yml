@@ -43,7 +43,7 @@ jobs:
       - name: Install cloudcompare
         run: |
           sudo apt install flatpak -y
-          flatpak install flathub org.cloudcompare.CloudCompare
+          flatpak install org.cloudcompare.CloudCompare
           flatpak run org.cloudcompare.CloudCompare -h
       - name: Test unittest
         run: |

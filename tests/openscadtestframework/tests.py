@@ -2,13 +2,13 @@ from __future__ import annotations
 import shutil
 import filecmp
 from enum import Enum
-from subprocess import Popen, PIPE
-from platform import system
 from pathlib import Path
 from typing import List, Union, Dict, Optional
+from re import search
 from .modules import Module
-from .utils import to_scad_str, scad_executable
+from .utils import to_scad_str
 from .mesh import Mesh
+from .os import OS
 
 EXPECTED_DIR = Path.cwd().joinpath("tests/expected")
 TMP_DIR_PREFIX = "oscad_generated_test_files."
@@ -126,7 +126,7 @@ class ModuleTest(ScadTest):
 class TestRunner():
 
     output_arg: str = "-o"
-    git_root_cmd = ["git", "rev-parse", "--show-toplevel"]
+    git_root_cmd = ["rev-parse", "--show-toplevel"]
 
     def __init__(self, out_type: OutputType) -> None:
         if (not self._check_if_run_on_root_repo()):
@@ -148,11 +148,9 @@ class TestRunner():
         raise NotImplementedError()
 
     def _check_if_run_on_root_repo(self) -> bool:
-        with Popen(self.git_root_cmd, stdout=PIPE, stderr=PIPE) as process:
-            out, _ = process.communicate()
-            result_path = Path(out.decode("utf-8").strip())
-            if result_path == Path.cwd():
-                return True
+        result = OS.execute_git(self.git_root_cmd)
+        if Path(result.stdout.strip()) == Path.cwd():
+            return True
         return False
 
     def clean_up(self) -> None:
@@ -161,28 +159,14 @@ class TestRunner():
     def _run_openscad_command(self, in_file: Path, out_file: Path, args: Optional[List[str]] = None) -> Union[None, STLResult, SVGResult]:
         if args is None:
             args = []
-        cmd = [scad_executable(), self.output_arg,
+        cmd = [self.output_arg,
                str(out_file), str(in_file)] + args
 
-        # Workaround for Windows PermissionError with shell=False
-        if system() == "Windows":
-            tmp_cmd: str = ""
-            for item in cmd:
-                tmp_cmd += item + " "
-            with Popen(tmp_cmd, stdout=PIPE, stderr=PIPE, shell=True) as process:
-                _, stderr = process.communicate()
-                if process.returncode != 0:
-                    err_mesage = stderr.decode("utf-8")
-                    raise OSError(
-                        f"openscad failed executing with message:\n{err_mesage}")
-        # End workaround
-        else:
-            with Popen(cmd, stdout=PIPE, stderr=PIPE) as process:
-                _, stderr = process.communicate()
-                if process.returncode != 0:
-                    err_mesage = stderr.decode("utf-8")
-                    raise OSError(
-                        f"openscad failed executing with message:\n{err_mesage}")
+        output = OS.execute_openscad(cmd)
+
+        if output.return_code != 0:
+            raise OSError(
+                f"openscad failed executing with message:\n{output.stderr}")
 
         if self._out_type == OutputType.STL:
             return STLResult(out_file)
@@ -265,10 +249,20 @@ class STLResult(Result):
 
     def compare_with_expected(self, test_id: str) -> None:
         expected_path = EXPECTED_DIR.joinpath(test_id + ".stl")
-        expected_mesh = Mesh(expected_path)
-        if self.mesh != expected_mesh:
-            self.outcome = OutcomeType.NOK
-            raise AssertionError("Stl files are not equal")
+        cmd: List[str] = ["-silent", "-auto_save", "off", "-o",
+                          str(expected_path), "-o", str(self.path), "-c2m_dist"]
+        result = OS.execute_cloudcompare(cmd)
+        if (result.return_code != 0):
+            raise OSError(f"Failed executing cloudcompare: {result.stderr}")
+
+        for line in result.stdout.split('\n'):
+            if search("\[ComputeDistances\] Mean distance =", line):
+                if float(line.split()[4]) == 0 and float(line.split()[9]) == 0:
+                    return
+                raise AssertionError("Stl files not equal")
+        raise ValueError(
+            f"Could not parse cloudcompare output: {result.stdout}")
+
 
     @property
     def total_z(self) -> float:

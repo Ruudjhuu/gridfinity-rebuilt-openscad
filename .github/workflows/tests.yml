@@ -44,10 +44,7 @@ jobs:
         run: |
           sudo apt install flatpak -y
           sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-          flatpak list
           sudo flatpak install flathub org.cloudcompare.CloudCompare -y
-          flatpak list
-          flatpak run org.cloudcompare.CloudCompare -h
       - name: Test unittest
         run: |
           python -m unittest discover tests/ -p "test_unit*.py" -v

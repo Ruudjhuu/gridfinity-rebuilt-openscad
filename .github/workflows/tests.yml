@@ -40,6 +40,10 @@ jobs:
       - name: Install openscad
         run: |
           sudo apt update && sudo apt install openscad -y
+      - name: Install cloudcompare
+        run: |
+          sudo apt update && sudo apt install cloudcompare -y
+          cloudcompare --version
       - name: Test unittest
         run: |
           python -m unittest discover tests/ -p "test_unit*.py" -v

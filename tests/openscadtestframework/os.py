@@ -48,7 +48,6 @@ class OS():
 
     @staticmethod
     def _execute_cmd(cmd: List[str]) -> OS.ExecResult:
-        print(cmd)
         # Workaround for Windows PermissionError with shell=False
         if system() == "Windows":
             tmp_cmd: str = ""

@@ -5,6 +5,7 @@ from enum import Enum
 from pathlib import Path
 from typing import List, Union, Dict, Optional
 from re import search
+from open3d import io, geometry
 from .modules import Module
 from .utils import to_scad_str
 from .mesh import Mesh
@@ -245,23 +246,35 @@ class Result():
 class STLResult(Result):
     def __init__(self, path: Path):
         super().__init__(path)
-        self.mesh = Mesh(path)
+        self.mesh = io.read_triangle_mesh(str(path))
 
     def compare_with_expected(self, test_id: str) -> None:
         expected_path = EXPECTED_DIR.joinpath(test_id + ".stl")
-        cmd: List[str] = ["-silent", "-auto_save", "off", "-o",
-                          str(expected_path), "-o", str(self.path), "-c2m_dist"]
-        result = OS.execute_cloudcompare(cmd)
-        if (result.return_code != 0):
-            raise OSError(f"Failed executing cloudcompare: {result.stderr}")
 
-        for line in result.stdout.split('\n'):
-            if search("\[ComputeDistances\] Mean distance =", line):
-                if float(line.split()[4]) == 0 and float(line.split()[9]) == 0:
-                    return
-                raise AssertionError("Stl files not equal")
-        raise ValueError(
-            f"Could not parse cloudcompare output: {result.stdout}")
+        mesh_cmp = io.read_triangle_mesh(str(expected_path))
+
+        cloud = geometry.PointCloud()
+        cloud.points = self.mesh.vertices
+        cloud_cmp = geometry.PointCloud()
+        cloud_cmp.points = mesh_cmp.vertices
+
+        cloud_result = cloud.compute_point_cloud_distance(cloud_cmp)
+
+        if not all(i == 0 for i in cloud_result):
+            raise AssertionError("STL files are not equal")
+        # cmd: List[str] = ["-silent", "-auto_save", "off", "-o",
+        #                   str(expected_path), "-o", str(self.path), "-c2m_dist"]
+        # result = OS.execute_cloudcompare(cmd)
+        # if (result.return_code != 0):
+        #     raise OSError(f"Failed executing cloudcompare: {result.stderr}")
+
+        # for line in result.stdout.split('\n'):
+        #     if search("\[ComputeDistances\] Mean distance =", line):
+        #         if float(line.split()[4]) == 0 and float(line.split()[9]) == 0:
+        #             return
+        #         raise AssertionError("Stl files not equal")
+        # raise ValueError(
+        #     f"Could not parse cloudcompare output: {result.stdout}")
 
 
     @property

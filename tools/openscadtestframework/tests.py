@@ -239,7 +239,7 @@ class Result():
 
         self.outcome = OutcomeType.OK
 
-    def compare_with_expected(self, test_id: Optional[str], path: Optional[Path]) -> None:
+    def compare_with_expected(self, test_id: Optional[str] = None, path: Optional[Path] = None) -> None:
         if not test_id and not path:
             raise ValueError("test_id or path should be given not none")
         if test_id and path:

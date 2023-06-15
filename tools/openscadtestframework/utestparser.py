@@ -61,7 +61,7 @@ class UTestSuite():
         output: str = ""
         with self.tmp_file.open("r") as f:
             for line in f.readlines():
-                res = match(r"include\s*<([^>]*)>", line)
+                res = match(r"include|use\s*<([^>]*)>", line)
                 if res:
                     output += line.replace(res.group(1),
                                            str(Path(res.group(1)).resolve()))

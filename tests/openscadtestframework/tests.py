@@ -124,6 +124,8 @@ class ModuleTest(ScadTest):
 
 class TestRunner():
 
+    default_args: list[str] = ["--enable",
+                               "fast-csg", "--enable", "predictible-output"]
     output_arg: str = "-o"
     git_root_cmd = ["rev-parse", "--show-toplevel"]
 
@@ -158,8 +160,8 @@ class TestRunner():
     def _run_openscad_command(self, in_file: Path, out_file: Path, args: Optional[List[str]] = None) -> Union[None, STLResult, SVGResult]:
         if args is None:
             args = []
-        cmd = [self.output_arg,
-               str(out_file), str(in_file)] + args
+        cmd = self.default_args + [self.output_arg,
+                                   str(out_file), str(in_file)] + args
 
         output = OS.execute_openscad(cmd)
 
@@ -237,8 +239,11 @@ class Result():
 
         self.outcome = OutcomeType.OK
 
-    def compare_with_expected(self, test_id: str) -> None:
-        raise NotImplementedError()
+    def compare_with_expected(self, test_id: Optional[str], path: Optional[Path]) -> None:
+        if not test_id and not path:
+            raise ValueError("test_id or path should be given not none")
+        if test_id and path:
+            raise ValueError("test_id or path should be given not both")
 
 
 class STLResult(Result):
@@ -246,11 +251,19 @@ class STLResult(Result):
         super().__init__(path)
         self.mesh = io.read_triangle_mesh(str(path))
 
-    def compare_with_expected(self, test_id: str) -> None:
-        expected_path = EXPECTED_DIR.joinpath(test_id + ".stl")
+    def compare_with_expected(self, test_id: Optional[str] = None, path: Optional[Path] = None) -> None:
+        super().compare_with_expected(test_id, path)
+
+        expected_path: Path = Path()
+        if test_id:
+            expected_path = EXPECTED_DIR.joinpath(test_id + ".stl")
+        elif path:
+            expected_path = path
+
+        if not expected_path.exists():
+            raise FileNotFoundError(f"{str(expected_path)} does not exist.")
 
         mesh_cmp = io.read_triangle_mesh(str(expected_path))
-
         cloud = geometry.PointCloud()
         cloud.points = self.mesh.vertices
         cloud_cmp = geometry.PointCloud()
@@ -262,21 +275,28 @@ class STLResult(Result):
             raise AssertionError("STL files are not equal")
 
     @property
-    def total_z(self) -> float:
+    def z(self) -> float:
         return float(self.mesh.get_axis_aligned_bounding_box().get_extent()[2])
 
     @property
-    def total_x(self) -> float:
+    def x(self) -> float:
         return float(self.mesh.get_axis_aligned_bounding_box().get_extent()[0])
 
     @property
-    def total_y(self) -> float:
+    def y(self) -> float:
         return float(self.mesh.get_axis_aligned_bounding_box().get_extent()[1])
 
 
 class SVGResult(Result):
-    def compare_with_expected(self, test_id: str) -> None:
-        expected_path = EXPECTED_DIR.joinpath(test_id + ".svg")
+    def compare_with_expected(self, test_id: Optional[str] = None, path: Optional[Path] = None) -> None:
+        super().compare_with_expected(test_id, path)
+
+        expected_path: Path = Path()
+        if test_id:
+            expected_path = EXPECTED_DIR.joinpath(test_id + ".svg")
+        elif path:
+            expected_path = path
+
         if not filecmp.cmp(expected_path, self.path, shallow=False):
             self.outcome = OutcomeType.NOK
             raise AssertionError("Svg files are not equal")

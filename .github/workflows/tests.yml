@@ -44,7 +44,7 @@ jobs:
           echo "PYTHONPATH=$PYTHONPATH:./tools" >> $GITHUB_ENV
       - name: Install openscad experimental
         run: |
-          sudo apt-get update && sudo apt-get install libgl1-mesa-glx
+          sudo apt-get update && sudo apt-get install libopengl0
           wget https://files.openscad.org/snapshots/OpenSCAD-2023.06.24.ai15506-x86_64.AppImage
           chmod +x OpenSCAD-2023.06.24.ai15506-x86_64.AppImage
           ./OpenSCAD-2023.06.24.ai15506-x86_64.AppImage --appimage-extract

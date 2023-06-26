@@ -21,7 +21,7 @@ jobs:
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install mypy pylint open3d
+          pip install -r requirements.txt
       - name: Check mypy
         run: |
           python -m mypy --strict .
@@ -40,10 +40,17 @@ jobs:
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install open3d
-      - name: Install openscad
+          pip install -r requirements.txt
+      - name: Install openscad experimental
         run: |
-          sudo apt update && sudo apt install openscad -y
+          wget https://files.openscad.org/snapshots/OpenSCAD-2023.06.24.ai15506-x86_64.AppImage
+          chmod +x OpenSCAD-2023.06.24.ai15506-x86_64.AppImage
+          ./OpenSCAD-2023.06.24.ai15506-x86_64.AppImage --appimage-extract
+          mv ./squashfs-root/AppRun ./squashfs-root/openscad
+          export PATH=$PATH:./squashfs-root
+      # - name: Install openscad
+      #   run: |
+      #     sudo apt update && sudo apt install openscad -y
       - name: Test unittest
         run: |
           python -m unittest discover tests/ -p "test_unit*.py" -v
@@ -69,7 +76,7 @@ jobs:
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install open3d
+          pip install -r requirements.txt
       - name: Install openscad
         run: |
           curl.exe --output openscad.zip --url https://files.openscad.org/OpenSCAD-2021.01-x86-64.zip

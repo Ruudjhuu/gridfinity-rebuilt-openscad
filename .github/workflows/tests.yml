@@ -56,13 +56,6 @@ jobs:
       - name: Test integrationtest
         run: |
           python -m unittest discover tests/ -p "test_int*.py" -v
-      - name: Get generated testfiles on fail
-        uses: actions/upload-artifact@v3
-        if: failure()
-        with:
-          name: generated_test_files_lnx
-          path: |
-            oscad_generated_test_files*
 
   test_windows:
     runs-on: windows-latest
@@ -76,14 +69,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: Install openscad
+          set PYTHONPATH=%PYTHONPATH%;.\tools
+      - name: Install openscad experimental
         run: |
-          curl.exe --output openscad.zip --url https://files.openscad.org/OpenSCAD-2021.01-x86-64.zip
+          curl.exe --output openscad.zip --url https://files.openscad.org/snapshots/OpenSCAD-2023.06.24-x86-32.zip
           tar -xf openscad.zip
-          move "openscad-2021.01" "C:\Program Files\Openscad"
+          move "OpenSCAD-2021.01-x86-64" "C:\Program Files\Openscad"
       - name: Test unittest
         run: |
-          python -m unittest discover tests/ -p "test_unit*.py" -v
+          python -m openscadtestframework -d tests
       - name: Test integrationtest
         run: |
           python -m unittest discover tests/ -p "test_int*.py" -v

@@ -1,7 +1,7 @@
 // UTILITY FILE, DO NOT EDIT
 // EDIT OTHER FILES IN REPO FOR RESULTS
 
-include <gridfinity-constants.scad>
+include <standard.scad>
 
 // ===== User Modules ===== //
 
@@ -23,7 +23,7 @@ module cutEqual(n_divx=1, n_divy=1, style_tab=1, scoop_weight=1) {
 }
 
 // initialize gridfinity
-module gridfinityInit(gx, gy, h, h0 = 0, l) {
+module gridfinityInit(gx, gy, h, h0 = 0, l = l_grid) {
     $gxx = gx;
     $gyy = gy;
     $dh = h; 
@@ -80,7 +80,7 @@ module profile_base() {
     ]);
 }
 
-module gridfinityBase(gx, gy, l, dx, dy, style_hole, off=0, final_cut=true) {
+module gridfinityBase(gx, gy, l, dx, dy, style_hole, off=0, final_cut=true, only_corners=false) {
     dbnxt = [for (i=[1:5]) if (abs(gx*i)%1 < 0.001 || abs(gx*i)%1 > 0.999) i];
     dbnyt = [for (i=[1:5]) if (abs(gy*i)%1 < 0.001 || abs(gy*i)%1 > 0.999) i];
     dbnx = 1/(dx==0 ? len(dbnxt) > 0 ? dbnxt[0] : 1 : round(dx));
@@ -97,8 +97,18 @@ module gridfinityBase(gx, gy, l, dx, dy, style_hole, off=0, final_cut=true) {
         translate([0,0,-1])
         rounded_rectangle(xx+0.005, yy+0.005, h_base+h_bot/2*10, r_fo1/2+0.001);
         
-        pattern_linear(gx/dbnx, gy/dbny, dbnx*l, dbny*l) 
-        block_base(gx, gy, l, dbnx, dbny, style_hole, off);
+        if(only_corners) {
+                difference(){
+                pattern_linear(gx/dbnx, gy/dbny, dbnx*l, dbny*l) 
+                block_base(gx, gy, l, dbnx, dbny, 0, off);
+                pattern_linear(2, 2, (gx-1)*l_grid+d_hole, (gy-1)*l_grid+d_hole)
+                block_base_hole(style_hole, off);
+            }
+        }
+        else {
+            pattern_linear(gx/dbnx, gy/dbny, dbnx*l, dbny*l) 
+            block_base(gx, gy, l, dbnx, dbny, style_hole, off);
+        }
     }
 }
 
@@ -107,13 +117,9 @@ module block_base(gx, gy, l, dbnx, dbny, style_hole, off) {
     difference() {
         block_base_solid(dbnx, dbny, l, off);
         
-        if (style_hole > 0) 
-            if (style_hole % p_corn < 0.001)
-            pattern_linear(2, 2, (gx-1)*length+d_hole, (gy-1)*length+d_hole)
-            block_base_hole(style_hole / p_corn, off);
-            else
-            pattern_circular(abs(d_hole)<0.001?1:4) 
-            translate([d_hole/2, d_hole/2, 0])
+        if (style_hole > 0)
+            pattern_circular(abs(l-d_hole_from_side/2)<0.001?1:4) 
+            translate([l/2-d_hole_from_side, l/2-d_hole_from_side, 0])
             block_base_hole(style_hole, off);
         }
 }
@@ -191,7 +197,7 @@ module profile_wall() {
         }
         // remove any negtive geometry in edge cases
         mirror([0,1,0])
-        square(100*length);
+        square(100*l_grid);
     }
 }
 
@@ -214,8 +220,8 @@ module block_bottom( h = 2.2, gx, gy, l ) {
 }
 
 module cut_move_unsafe(x, y, w, h) {
-    xx = ($gxx*length+d_magic);
-    yy = ($gyy*length+d_magic); 
+    xx = ($gxx*l_grid+d_magic);
+    yy = ($gyy*l_grid+d_magic); 
     translate([(x)*xx/$gxx,(y)*yy/$gyy,0])
     translate([(-xx+d_div)/2,(-yy+d_div)/2,0])
     translate([(w*xx/$gxx-d_div)/2,(h*yy/$gyy-d_div)/2,0])
@@ -237,8 +243,8 @@ module block_cutter(x,y,w,h,t,s) {
     xcutlast = abs(x+w-$gxx)<0.001 && style_lip == 0;
     zsmall = ($dh+h_base)/7 < 3;
     
-    ylen = h*($gyy*length+d_magic)/$gyy-d_div; 
-    xlen = w*($gxx*length+d_magic)/$gxx-d_div; 
+    ylen = h*($gyy*l_grid+d_magic)/$gyy-d_div; 
+    xlen = w*($gxx*l_grid+d_magic)/$gxx-d_div; 
     
     height = $dh;
     extent = (abs(s) > 0 && ycutfirst ? d_wall2-d_wall-d_clear : 0); 

@@ -49,12 +49,9 @@ jobs:
           ./OpenSCAD-2023.06.24.ai15506-x86_64.AppImage --appimage-extract
           mv ./squashfs-root/AppRun ./squashfs-root/openscad
           echo "./squashfs-root" >> $GITHUB_PATH
-      # - name: Install openscad
-      #   run: |
-      #     sudo apt update && sudo apt install openscad -y
       - name: Test unittest
         run: |
-          python -m unittest discover tests/ -p "test_unit*.py" -v
+          python -m openscadtestframework -d tests
       - name: Test integrationtest
         run: |
           python -m unittest discover tests/ -p "test_int*.py" -v

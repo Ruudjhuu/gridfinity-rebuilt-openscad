@@ -59,7 +59,7 @@ class UTestSuite():
         os.chdir(self.file_path.parent)
 
         output: str = ""
-        with self.tmp_file.open("r") as f:
+        with self.tmp_file.open("r", encoding="utf-8") as f:
             for line in f.readlines():
                 res = match(r"include|use\s*<([^>]*)>", line)
                 if res:
@@ -67,7 +67,7 @@ class UTestSuite():
                                            str(Path(res.group(1)).resolve()))
                 else:
                     output += line
-        with self.tmp_file.open("w") as f:
+        with self.tmp_file.open("w", encoding="utf-8") as f:
             f.write(output)
 
         os.chdir(tmp_pwd)

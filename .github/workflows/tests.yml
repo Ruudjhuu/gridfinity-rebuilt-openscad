@@ -41,13 +41,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          echo "PYTHONPATH=$PYTHONPATH:./tools" >> $GITHUB_ENV
       - name: Install openscad experimental
         run: |
           wget https://files.openscad.org/snapshots/OpenSCAD-2023.06.24.ai15506-x86_64.AppImage
           chmod +x OpenSCAD-2023.06.24.ai15506-x86_64.AppImage
           ./OpenSCAD-2023.06.24.ai15506-x86_64.AppImage --appimage-extract
           mv ./squashfs-root/AppRun ./squashfs-root/openscad
-          export PATH=$PATH:./squashfs-root
+          echo "./squashfs-root" >> $GITHUB_PATH
       # - name: Install openscad
       #   run: |
       #     sudo apt update && sudo apt install openscad -y

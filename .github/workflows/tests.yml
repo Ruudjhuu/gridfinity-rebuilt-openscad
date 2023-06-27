@@ -69,7 +69,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          set PYTHONPATH=%PYTHONPATH%;.\tools
+          set PYTHONPATH=%PYTHONPATH%;./tools
       - name: Install openscad experimental
         run: |
           curl.exe --output openscad.zip --url https://files.openscad.org/snapshots/OpenSCAD-2023.06.24-x86-32.zip
